@@ -1,0 +1,73 @@
+%% Creator: Inkscape 1.2.1 (9c6d41e410, 2022-07-14), www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'twister_.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \newcommand*\fsize{\dimexpr\f@size pt\relax}%
+  \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{1072.5bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.51748252)%
+    \lineheight{1}%
+    \setlength\tabcolsep{0pt}%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{twister_.pdf}}%
+    \put(0.95055943,0.44973427){\color[rgb]{0,0,0.50196078}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}X\end{tabular}}}}%
+    \put(0.9277762,0.49602797){\color[rgb]{0,0,0.50196078}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Z\end{tabular}}}}%
+    \put(0.90534267,0.44973427){\color[rgb]{0,0,0.50196078}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Y\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{twister_.pdf}}%
+    \put(0.44706293,0.44973427){\color[rgb]{0,0,0.50196078}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}X\end{tabular}}}}%
+    \put(0.4242797,0.49602797){\color[rgb]{0,0,0.50196078}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Z\end{tabular}}}}%
+    \put(0.40184616,0.44973427){\color[rgb]{0,0,0.50196078}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Y\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{twister_.pdf}}%
+    \put(0.24087614,0.14776641){\color[rgb]{0.06666667,0.19215686,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Z\end{tabular}}}}%
+    \put(0.31210188,0.02842096){\color[rgb]{0.06666667,0.19215686,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}X\end{tabular}}}}%
+    \put(0.17867705,0.0281107){\color[rgb]{0.06666667,0.19215686,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Y\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{twister_.pdf}}%
+    \put(0.74396227,0.14812529){\color[rgb]{0.06666667,0.19215686,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Z\end{tabular}}}}%
+    \put(0.81518801,0.02877984){\color[rgb]{0.06666667,0.19215686,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}X\end{tabular}}}}%
+    \put(0.68176317,0.02846958){\color[rgb]{0.06666667,0.19215686,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Y\end{tabular}}}}%
+  \end{picture}%
+\endgroup%

@@ -1,0 +1,307 @@
+\chapter{Implementation of User Material \texttt{(UMAT)} Subroutine}%
+\label{chapter:three} 
+The necessary theoretical basis for the finite viscoelasticity theory has been discussed in the previous chapter. The goal in this chapter is to describe the implementation details of the finite viscoelastic material model for the User Material subroutine \texttt{UMAT} that is used in the ABAQUS/Standard finite element software. The source code for the subroutine is written using the FORTRAN programming language.
+
+\section{Interface to the \texttt{UMAT} Subroutine}
+Through the \texttt{UMAT} subroutine, it is possible to program specialized material models that are not already available in ABAQUS/Standard. For this, a well-documented interface is made available. Access to a large number of variables that could be necessary to implement the constitutive relations are made available within the subroutine. Out of these 
+\begin{itemize}
+    \item \texttt{DFGRD0} - the deformation gradient \(\Ftot_{t=t_{n-1}}\) at the start of the current time increment step,
+    \item \texttt{DFGRD1} - the deformation gradient \(\Ftot_{t=t_{n}}\) at the end of the current time increment step,
+    \item \texttt{DTIME} - the time increment \(\Delta t\),
+    \item \texttt{PROPS} - the parameters of the material model, and 
+    \item \texttt{STATEV} - the internal state variable(s)
+\end{itemize}
+are relevant. 
+
+Finally as required by the finite element formulation, the subroutine requires the calculation of 
+\begin{itemize}
+    \item \texttt{STRESS} - the Cauchy stress in the Voigt-notation
+    \item \texttt{DDSDDE} - the spatial tangent stiffness modulus \({\Cmattot}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\), and
+    \item \texttt{STATEV} - the internal state variable(s)
+\end{itemize}
+as outputs. Furthermore, during the finite element solution procedure, this subroutine is called at every gauss integration point within an element in the model, and hence, should be programmed as efficiently as possible.
+
+\section{Adaptations to Viscoelasticity Theory}
+In order to implement a \texttt{UMAT} that is as simple as possible while also being able to adequately describe a wide variety of viscoelastic materials (or Hydrogels), the following adaptations to the previously described theory are considered.
+\paragraph*{First order Ogden strain energy function} The strain energy functions for the equilibrium part \(\Psieq\) and the non-equilibrium part \(\Psineq\) of the viscoelastic material model are defined in \cref{eq:strain_energy_eq} and \cref{eq:strain_energy_neq}. These are valid for any order \((r = 1,\ldots,N)\) of the Ogden class of strain energy functions. Generally, a 3-rd order \((r=3)\) or 4-th order \((r=4)\) strain energy function is used to model hyperelastic materials. However, hereafter we shall consider simplified strain energy function for both the equilibrium and non-equilibrium parts with \(r=1\). This is done to keep the number of material parameters of the model to a minimum. 
+
+\paragraph*{Multiple non-equilibrium relaxation mechanisms}
+Recall that the total strain energy \(\Psitot\) in \cref{eq:strain_energy_function_tot} is made up of one equilibrium(EQ) part and \(k\) non-equilibrium(NEQ) parts corresponding to the several relaxation mechanisms. For the sake of describing the theory, however, the simple case of a single relaxation mechanism \((k=1)\) was considered. It will be seen later that such a simplified material model cannot adequately describe the material response observed in experimental data. Hence, models with two or more relaxation mechanims \((k > 1)\) should to be considered. To this end, models with one, two and three non-equilibrium parts have been developed and tested as part of this work.
+
+\section{Utility Subroutines}
+For implemention of the \texttt{UMAT}, trivial operations that are encountered in tensor algebra were required. It would be imprudent to write algorithms for these operations by oneself, when they have already been developed over the years. Two such operations, for which freely available implementations were used, are further described. 
+
+\paragraph*{Tensor Inverse}
+The inverse of a tensor \(\mathbf{A} = \mathrm{A}\) can be given by
+\begin{equation}
+    \mathbf{A}^{-1} = \frac{1}{\text{det}(\mathbf{A})} \text{adj}(\mathbf{A})
+\end{equation}
+such that
+\begin{equation}
+    \mathbf{A} \mathbf{A}^{-1} = \mathbf{A}^{-1} \mathbf{A} = \mathbf{I}
+\end{equation} 
+If \(\mathbf{A} = \mathrm{\left[A_{ij}\right]}\, \evec{i}\otimes \evec{j}\) is expressed in the Euclidian basis \(\evec{i}\), its inverse can be calculated by
+\begin{equation}
+    \mathbf{A}^{-1} = \mathrm{\left[A_{ij}\right]^{-1}} \evec{i}\otimes \evec{j}
+\end{equation} 
+where \(\mathrm{\left[A_{ij}\right]^{-1}}\) is the inverse of the matrix \(\mathrm{\left[A_{ij}\right]}\).
+
+Matrix inversion is one of the most widely used operation in matrix algebra. Here, a subroutine \texttt{M33INV} made available by David G. Simpson from 
+NASA Goddard Space Flight Center has been used.
+
+
+\paragraph*{Spectral Decomposition}
+The spectral decomposition of a tensor \(\mathbf{A}\) expressed in any basis involves solving an eigen value problem. This tensor can then be expressed in the eigen basis by
+\begin{equation}
+    \mathbf{A} = \sum_{i=1}^{N} \Lambda_{i}\, \Eigvec{i} \otimes \Eigvec{i}
+\end{equation}
+where \(\Lambda_{i}\) are the eigen values or principal values and \(\Eigvec{i}\) are the eigen vectors or principal directions of \(\mathbf{A}\). If \(\mathbf{A} = \mathrm{\left[A_{ij}\right]}\, \evec{i}\otimes \evec{j}\) is expressed in the Euclidian basis \(\evec{i}\), then the spectral decomposition of \(\mathbf{A}\) reduces to solving the eigen value problem for the matrix \(\mathrm{\left[A_{ij}\right]}\). A wide variety of algorithms are already available to compute the eigen values and eigen vectors of a matrix. Here, a freely available subroutine \texttt{DSYEVJ3} \cite{Kopp2006Oct} that implements the Jacobi method is used.
+
+\section{Implementation Algorithm}
+\label{sec:implementation_algorithm}
+The implementation of the described finite viscoelastic material model with Ogden strain energy functions is discussed here. This implementation is valid for models with one or more relaxation mechanisms \(k>1\). As part of this work, models with one, two and three relaxation mechanisms have been developed.  Briefly the entire algorithm can be divided into seven steps as follows:
+\begin{enumerate}[label=\emph{Step \arabic*}]
+    \addtolength{\itemindent}{0.8cm}%
+    \item Initialize and compute necessary variables and constants
+    \item Calculate trial left Cauchy-Green tensor(s)
+    \item Solve NEQ evolution equation
+    \item Update of the internal state variable(s)
+    \item Calculate NEQ Cauchy stress and spatial tangent stiffness modulus
+    \item Calculate EQ Cauchy stress and spatial tangent stiffness modulus
+    \item Calculate total Cauchy stress and spatial tangent stiffness modulus
+\end{enumerate}
+
+Furthermore, before proceeding with the aforementioned steps, local variables (scalars, vectors and tensors) along with their type and size have to be declared, so that the sufficient memory can be allocated for these variables during the finite element procedure. 
+
+Next, the implementation details for every step in the algorithm are elaborated. These details were used as pseudocode for the final implementation and also helped to effectively structure the source code.
+
+\subsection*{Step 1}
+\vspace{0.1cm}
+\hrule
+\vspace{0.1cm}
+\hrule
+\begin{itemize}
+    \item \textbf{Goal:} Initialize and compute necessary varibles and constants
+    \item \textbf{Requirements:} \texttt{STATEV}, \texttt{PROPS}, \texttt{DFGRD1}
+    \item \textbf{Output:} \(({\be})^{k}_{t_{n-1}},\, \mu,\, \alpha,\, \K,\, J,\, (\mum,\, \am,\, \km,\, \nd,\, \nv)^k\)
+    \item[] \(\hfill  k=1,\ldots,N\)
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Procedure:}
+\begin{itemize}
+    \item[-] Define the second order Identity tensor \(\mathbf{I}\)
+    \item[-] Retrieve \(\mu,\, \alpha,\, \K,\, (\mum,\, \am,\, \km,\, \nd,\, \nv)^k\) from \texttt{PROPS}
+    \item[-] For the first increment, set \texttt{STATEV} keeping in mind \(({\be})^{k}_{t_{0}} = \mathbf{I}\)
+    \item[-] Retrieve \(({\be})^{k}_{t_{n-1}}\) from \texttt{STATEV}
+    \item[-] Calculate \(J\) from \texttt{DFGRD1} \hfill | \cref{eq:volumemap} 
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Notes:} \newline
+Since internal variable(s) \(\be^{k}\) is a symmetric tensor, it is stored in and retrieved from \texttt{STATEV} using the Voigt notation. Furthermore the values from two or more internal variables are stacked one after the other. Thus we have for a model with two relaxation mechanisms \((k=2)\), \[ \text{\texttt{STATEV}} = \left[\mathrm{b_e}^{1}_{11} \; \mathrm{b_e}^{1}_{22}\; \mathrm{b_e}^{1}_{33}\; \mathrm{b_e}^{1}_{12}\; \mathrm{b_e}^{1}_{13} \; \mathrm{b_e}^{1}_{23} \;\mathrm{b_e}^{2}_{11} \; \mathrm{b_e}^{2}_{22}\; \mathrm{b_e}^{2}_{33}\; \mathrm{b_e}^{2}_{12}\; \mathrm{b_e}^{2}_{13} \; \mathrm{b_e}^{2}_{23}\right]^{T}\]
+\vspace{0.1cm}
+\hrule
+\vspace{0.8cm}
+
+\subsection*{Step 2}
+\vspace{0.1cm}
+\hrule
+\vspace{0.1cm}
+\hrule
+\begin{itemize}
+    \item \textbf{Goal:} Calculate trial left Cauchy-Green tensor(s)
+    \item \textbf{Requirements:} \(({\be})^{k}_{t_{n-1}}\)\, \texttt{DFGRD0}, \texttt{DFGRD1}
+    \item \textbf{Output:} \(\tr{\be}^{k}\)
+    \item[] \( \hfill  k=1,\ldots,N \)
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Procedure:}
+\begin{itemize}
+    \item[-] Calculate \((\ibe)^{k}_{t_{n-1}}\)
+    \item[-] Calculate \((\Ci)^{k}_{t_{n-1}} = \tF_{t=t_{n-1}} (\ibe)^{k}_{t_{n-1}} \Ftot_{t=t_{n-1}}\) \hfill | \cref{eq:inelastic_right_cauchygreen}
+    \item[-] Calculate \((\iCi)^{k}_{t_{n-1}}\)
+    \item[-] Calculate \(\tr{\be}^{k}  = \Ftot_{t=t_{n}} (\iCi)^{k}_{t_{n-1}} \tF_{t=t_{n}}\) \hfill | \cref{eq:be_tr}
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Notes:} \newline
+Alternatively, it is possible to arrive at \(\tr{\be}^{k}\) from \((\be)^{k}_{t_{n-1}}\) using just two steps given by
+ \begin{align*}
+    (\iCi)^{k}_{t_{n-1}} &= \iF_{t=t_{n-1}} (\ibe)^{k}_{t_{n-1}} \itF_{t=t_{n-1}} \\[0.2em]
+    \tr{\be}^{k}  &= \Ftot_{t=t_{n}} (\iCi)^{k}_{t_{n-1}} \tF_{t=t_{n}} 
+\end{align*}
+However, since \(\be\) is symmetric, positive definite and also inverting \(\Ftot\) could lead to numerical errors, this is not used.
+\vspace{0.1cm}
+\hrule
+\vspace{0.8cm}
+
+\subsection*{Step 3}
+\vspace{0.1cm}
+\hrule
+\vspace{0.1cm}
+\hrule
+\begin{itemize}
+    \item \textbf{Goal:} Solve the NEQ evolution equation
+    \item \textbf{Requirements:} \(\tr{\be}^{k},\, (\mum,\, \am,\, \km,\, \nd,\, \nv)^k\),\, \texttt{DTIME} 
+    \item \textbf{Output:} \(({\be})^{k},\; ({\tauneq})^{k},\; ({\eigvec{i}})^{k},\; \tr{\prstretch{2}{i}}^{k},\; ({\prtauneq})^{k},\; (C^{\text{alg}}_{ij})^{k}\)
+    \item[] \(\hfill k=1,\ldots,N \)
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Procedure:}
+\begin{itemize}
+    \item[-] Calculate principal values \(\tr{\prstretch{2}{i}}^{k}\) and directions \(\tr{\eigvec{i}}^{k}\) of \(\tr{\be}^{k}\)
+    \item[-] Calculate trial principal strain \(\tr{\prstrain{i}}^{k}  = \frac{1}{2} \ln\tr{\prstretch{2}{i}}^{k} \)
+    \item[-] Initialize iteration variables \((\prstretch{2}{i})^{k} \leftarrow \tr{\prstretch{2}{i}}^{k}\) and \({(\prstrain {i})}^{k} \leftarrow \tr{\prstrain{i}}^{k}\)
+    \item[-] Perform Newton-Raphson iteration, for \(m = 1, \ldots, \text{\texttt{MAXITER}}\)
+    \begin{itemize}
+        \item Calculate NEQ Jacobian \(({\Je})^{k}\) \hfill | \cref{eq:jacobian_neq}
+        \item Calculate principal values \((\sqprstretchdev{i})^{k}\) of \((\bebar)^{k}\) \hfill | \cref{eq:principal_be_dev}
+        \item Calculate prinicpal values \(({\prtauneqdev})^{k}\) of \((\text{dev}(\tauneq))^{k}\)
+        \item Calculate the residual vector \((r_{i})^k\) \hfill | \cref{eq:residual}
+        \item Calculate norm of residual vector \(||\bm{r}||\) \hfill | \cref{eq:residual_norm}\newline If \(||\bm{r}||< \text{tol and } m>1\), Newton-Raphson iteration completed. 
+        \item Calculate \(\left(\pdv{(\text{dev}(\tauneq)_{i})}{\prstrain{i}}\right)^{k}, \,\left(\pdv{(\text{dev}(\tauneq)_{i})}{\prstrain{j}}\right)^{k}\) | \cref{eq:diff_prtauneqdevi_i}, \cref{eq:diff_prtauneqdevi_j}
+        \item Calculate \((K_{ij})^{k}\) \hfill | \cref{eq:K_newton_iteration}, \cref{eq:diff_prtaueqvol}
+        \item Calculate \((K^{-1}_{ij})^{k}\)
+        \item Calculate strain increment \((\Delta \prstrain{i})^{k}  = - (K^{-1}_{ij})^{k} (r_{i})^k\) \hfill | \cref{eq:strain_increment_neq}
+        \item Update principal strain \((\prstrain{i})^{k}\) \hfill | \cref{eq:strain_update_neq}
+        \item Update principal values \(({\prstretch{2}{i}})^{k} = \exp\left(2\,(\prstrain{i})^{k}\right)\) of \((\be)^{k}\) 
+    \end{itemize}
+    \item[-] Calculate required quantities
+    \begin{itemize}
+        \item \(({\be})^{k}\) \hfill | \cref{eq:def_be}
+        \item \(({\tauneq})^{k}\) \hfill | \cref{eq:tauneq} 
+        \item \((C^{\text{alg}}_{ij})^{k}\) \hfill | \cref{eq:C_alg}
+    \end{itemize}
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Notes:} \newline
+In order to calculate the prinicipal values and directions of \(\tr{\be}^{k}\), instead of the inbuilt function \texttt{SPRIND} in ABAQUS, the general purpose subroutine \texttt{DSYEVJ3} is used. This allowed for standalone compilation and testing of the \texttt{UMAT} without having access to ABAQUS.
+\vspace{0.1cm}
+\hrule
+\vspace{0.8cm}
+
+\subsection*{Step 4}
+\vspace{0.1cm}
+\hrule
+\vspace{0.1cm}
+\hrule
+\begin{itemize}
+    \item \textbf{Goal:} Update internal state variable(s)
+    \item \textbf{Requirements:} \(({\be})^{k}\)
+    \item \textbf{Output:} \texttt{STATEV}
+    \item[] \(\hfill k=1,\ldots,N \)
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Procedure:}
+\begin{itemize}
+    \item[-] Update \texttt{STATEV} with values from \(({\be})^{k}\)
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\vspace{0.8cm}
+
+\subsection*{Step 5}
+\vspace{0.1cm}
+\hrule
+\vspace{0.1cm}
+\hrule
+\begin{itemize}
+    \item \textbf{Goal:} Calculate NEQ Cauchy stress and tangent stiffness modulus
+    \item \textbf{Requirements:} \(J,\;({\tauneq})^{k},\;({\eigvec{i}})^{k},\;\tr{\prstretch{2}{i}}^{k},\; ({\prtauneq})^{k},\;(C^{\text{alg}}_{ij})^{k}\)
+    \item \textbf{Output:} \(({\sigmaneq})^{k},\; \left({\Cmatneq}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\right)_{\text{VOIGT}}^{k}\)
+    \item[] \(\hfill k=1,\ldots,N \)
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Procedure:}
+\begin{itemize}
+    \item[-] Calculate \((\sigmaneq)^{k}= \frac{1}{J}(\tauneq)^{k}\) \hfill | \cref{eq:kirchoff_stress}
+    \item[-] Calculate coefficients of \(\left(\Lmatneqtil\right)^{k}\) | \cref{eq:Lneq_til}, \cref{eq:Lij_neq}, \cref{eq:Gij_neq}
+    \item[-] Calculate \(\left(\Cmatneq\right)^{k}\) \hfill | \cref{eq:Cmatneq}
+    \item[-] Calculate \(\left({\Cmatneq}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\right)^{k}\) \hfill | \cref{eq:jaumann_spatial_tangent_stiffness_neq}
+    \item[-] Calculate \(\left({\Cmatneq}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\right)^{k}_{\text{VOIGT}}\) \hfill | \cref{eq:abaqus_tangent_stiffness_modulus}
+
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\vspace{0.8cm}
+
+\subsection*{Step 6}
+\vspace{0.1cm}
+\hrule
+\vspace{0.1cm}
+\hrule
+\begin{itemize}
+    \item \textbf{Goal:} Calculate EQ Cauchy stress and tangent stiffness modulus
+    \item \textbf{Requirements:} \texttt{DFGRD1}, \(J,\,\mu,\, \alpha,\, \K\)
+    \item \textbf{Output:} \({\sigmaeq},\; \left({\Cmateq}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\right)_{\text{VOIGT}}\)
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Procedure:}
+\begin{itemize}
+    \item[-] Calculate \(\btot\) \hfill | \cref{eq:def_right_left_cauchygreen}
+    \item[-] Calculate principal values \(\prstretche{2}{i}\) and directions \(\eigvec{i}\) of \(\btot\)
+    \item[-] Calculate principal values \(\sqprstretchedev{i}\) of \(\bbar\) \hfill | \cref{eq:principal_b_dev}
+    \item[-] Calculate \(\prtaueq\) \hfill | \cref{eq:principal_kirchoff_eq_2}, \cref{eq:principal_kirchoff_stress_eq_dev}, \cref{eq:principal_kirchoff_stress_eq_vol}
+    \item[-] Calculate \(\sigmaeq\) \hfill | \cref{eq:taueq}, \cref{eq:kirchoff_stress} 
+    \item[-] Calculate \(c_{ij}\) \hfill | \cref{eq:c_ij}, \cref{eq:diff_prtaueqdevi_i}, \cref{eq:diff_prtaueqdevi_j}, \cref{eq:diff_prtaueqvol}
+    \item[-] Calculate \(g_{ij}\) \hfill | \cref{eq:g_ij}, \cref{eq:g_ij_equalstretch}
+    \item[-] Calculate coefficients of \({\Cmateq}\) \hfill | \cref{eq:Cmat_eq}
+    \item[-] Calculate \({\Cmateq}\) \hfill | \cref{eq:Cmat_eq}
+    \item[-] Calculate \({\Cmateq}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\) \hfill | \cref{eq:jaumann_spatial_tangent_stiffness_eq}
+    \item[-]  Calculate \(\left({\Cmateq}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\right)_{\text{VOIGT}}\) \hfill | \cref{eq:abaqus_tangent_stiffness_modulus}
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Notes:} \newline
+Here, to calculate the principal values and directions of \({\btot}\), again the subroutine \texttt{DSYEVJ3} is used.
+\vspace{0.1cm}
+\hrule
+\vspace{0.8cm}
+
+\subsection*{Step 7}
+\vspace{0.1cm}
+\hrule
+\vspace{0.1cm}
+\hrule
+\begin{itemize}
+    \item \textbf{Goal:} Calculate total Cauchy stress and tangent stiffness modulus
+    \item \textbf{Requirements:} \({\sigmaeq},\; 
+    ({\sigmaneq})^{k},\; 
+    \left({\Cmateq}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\right)_{\text{VOIGT}},\,
+     \left({\Cmatneq}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\right)_{\text{VOIGT}}^{k}\)
+    \item \textbf{Output:} \(\left({\sigmatot}\right)_{\text{VOIGT}},\; \left({\Cmattot}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\right)_{\text{VOIGT}}\) 
+    \item[] \(\hfill k=1,\ldots,N \)
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Procedure:}
+\begin{itemize}
+    \item[-] Calculate \(\sigmatot = \sigmaeq + {\displaystyle \sum_{k=1}^{N}} \sigmaneq \)
+    \item[-] Calculate \(\left({\sigmatot}\right)_{\text{VOIGT}}\)
+    \item[-] Calculate \(\left({\Cmattot}{\,\big|}^{\text{FE}}_{\bm{\sigma}} \right)_{\text{VOIGT}} = \left({\Cmateq}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\right)_{\text{VOIGT}} + 
+    {\displaystyle \sum_{k=1}^{N}} \left({\Cmatneq}{\,\big|}^{\text{FE}}_{\bm{\sigma}}\right)_{\text{VOIGT}}\)  
+\end{itemize}
+\vspace{0.1cm}
+\hrule
+\textbf{Notes:} \newline
+The Voigt notation for \(\sigmatot\) compatible with \cref{eq:abaqus_tangent_stiffness_modulus} is given by 
+
+\[\left({\sigmatot}\right)_{\text{VOIGT}} = \left[\mathrm{\sigma}_{11} \; \mathrm{\sigma}_{22}\; \mathrm{\sigma}_{33}\; \mathrm{\sigma}_{12}\; \mathrm{\sigma}_{13} \; \mathrm{\sigma}_{23} \right]^{T}\]
+\vspace{0.1cm}
+\hrule
+\vspace{0.8cm}
+
+
+
+\section{Twin Implementation in MATLAB}
+\label{sec:twin_model}
+As an example, the FORTRAN source code for the \texttt{UMAT} using the previously described implementation with two relaxation mechanisms can be found in \cref{appendixA}. However, in order to facilitate quick debugging and, later on, have access to optimization libraries for parameter identification, it was useful to have a one-to-one \emph{twin} implementation of the \texttt{UMAT} as a MATLAB function. 
+
+Since the MATLAB programming language is also 1-indexed, it was easy to translate the FORTRAN source code into MATLAB. Furthermore, certain in-built functions available within MATLAB, for example \texttt{eig(A)} instead of \texttt{DSYEVJ3}, were also used. Finally, the equivalence of both the MATLAB function and FORTRAN subroutine were tested by using the same input parameter arguments and comparing the outputs. 
