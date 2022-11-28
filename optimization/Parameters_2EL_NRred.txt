@@ -1,0 +1,14 @@
+xsol = [
+MU
+ALPHA
+KELAS
+MUVIS
+ALPHAVIS
+KVIS
+RTIME
+RTIME_2
+]
+
+####### FITTED TO ALL DATA
+
+xsol =    0.0009    3.4511   44.5287    0.0958    0.1327   53.8536    1.2818   17.7804
