@@ -388,7 +388,7 @@
         DO N = 1, 3
           RESVEC(N) = EPSe(N) - EPSeTR(N) 
      1                + DTIME * (ONE/(TWO*ETADEV)*DEVTAU(N)
-     2                          +KVIS/(SIX*ETAVOL)*(Je*Je-ONE))
+     2                          +KVIS/(THREE*FOUR*ETAVOL)*(Je*Je-ONE))
         END DO
 !       - Calculating Norm of Residual Vector
         NORMRES = (RESVEC(1)**TWO 
@@ -431,7 +431,7 @@
           DO J = 1,3
             KMAT(I,J) = IDT2(I,J)
      1               + DTIME * ((ONE/(TWO*ETADEV))*DDEVTAUDEPSe(I,J) 
-     2                         -(ONE/(THREE*ETAVOL)*KVIS*Je*Je))
+     2                         +(ONE/(THREE*ETAVOL)*KVIS*Je*Je))
           END DO
         END DO
 !       - Calculating KINV
@@ -551,7 +551,7 @@
           RESVEC_2(N) = EPSe_2(N) - EPSeTR_2(N) 
      1                + DTIME *
      2                 (ONE/(TWO*ETADEV_2)*DEVTAU_2(N)
-     2                  + KVIS_2/(SIX*ETAVOL_2)*(Je_2*Je_2-ONE))
+     2                  + KVIS_2/(THREE*FOUR*ETAVOL_2)*(Je_2*Je_2-ONE))
         END DO
 !       - Calculating Norm of Residual Vector
         NORMRES_2 = (RESVEC_2(1)**TWO 
@@ -595,7 +595,7 @@
             KMAT_2(I,J) = IDT2(I,J)
      1               + DTIME * 
      2                ((ONE/(TWO*ETADEV_2))*DDEVTAUDEPSe_2(I,J) 
-     2                -(ONE/(THREE*ETAVOL_2)*KVIS_2*Je_2*Je_2))
+     2                +(ONE/(THREE*ETAVOL_2)*KVIS_2*Je_2*Je_2))
           END DO
         END DO
 !       - Calculating KINV

@@ -6,3 +6,9 @@ Contents:
 - UMAT          : ABAQUS User Subroutine FORTRAN Files (UMAT) 
 - optimization  : MATLAB Live Scripts and Functions for parameter optimization using Levenberg-Marquardt optimization
 - report        : LaTeX source and figures used for generating reportAJC.pdf
+
+
+Changelog:
+- 09.02.24      : Update feedback from XF Cheng
+  - 1. Fix incorrect coefficient in UMAT files (residual calculation, c.f. Eq. 2.154 & 2.155 -> 1/(3*4) instead of 1/6)
+  - 2. Fix incorrect sign in Report Eq. 2.158 and correspondingly update UMAT files                
