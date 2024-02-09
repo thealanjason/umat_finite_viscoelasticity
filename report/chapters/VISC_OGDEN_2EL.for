@@ -112,7 +112,8 @@
 !     C4EQJ         - EQ SPATIAL TANGENT STIFFNESS MODULUS (FE)
 !     CEQ           - EQ SPATIAL TANGENT STIFFNESS MODULUS (VOIGT)
 !     STRESSTOT     - TOTAL CAUCHY STRESS
-!     IDT2          - 2ND ORDER IDENTTITY TENSOR ---------------------------------------------------------------------
+!     IDT2          - 2ND ORDER IDENTTITY TENSOR 
+! ---------------------------------------------------------------------
       DOUBLE PRECISION, DIMENSION(3,3) :: IDT2
 
       DOUBLE PRECISION, DIMENSION(3, 3) :: BeOLD
@@ -375,15 +376,15 @@
         PVBeBAR(2) = Je**(-TWO/THREE)*PVBe(2)
         PVBeBAR(3) = Je**(-TWO/THREE)*PVBe(3)
 !       - Calculating Principal Values of Deviatoric Kirchoff Stress
-        DEVTAU(1) = MUVIS *((TWO/THREE)*(PVBeBAR(1)**(ALPHAVIS/TWO))
-     1                     -(ONE/THREE)*(PVBeBAR(2)**(ALPHAVIS/TWO))
-     2                     -(ONE/THREE)*(PVBeBAR(3)**(ALPHAVIS/TWO)))
-        DEVTAU(2) = MUVIS *((TWO/THREE)*(PVBeBAR(2)**(ALPHAVIS/TWO))
-     1                     -(ONE/THREE)*(PVBeBAR(3)**(ALPHAVIS/TWO))
-     2                     -(ONE/THREE)*(PVBeBAR(1)**(ALPHAVIS/TWO)))
-        DEVTAU(3) = MUVIS *((TWO/THREE)*(PVBeBAR(3)**(ALPHAVIS/TWO))
-     1                     -(ONE/THREE)*(PVBeBAR(1)**(ALPHAVIS/TWO))
-     2                     -(ONE/THREE)*(PVBeBAR(2)**(ALPHAVIS/TWO)))
+        DEVTAU(1) = MUVIS * ((TWO/THREE)*(PVBeBAR(1)**(ALPHAVIS/TWO))
+     1                      -(ONE/THREE)*(PVBeBAR(2)**(ALPHAVIS/TWO))
+     2                      -(ONE/THREE)*(PVBeBAR(3)**(ALPHAVIS/TWO)))
+        DEVTAU(2) = MUVIS * ((TWO/THREE)*(PVBeBAR(2)**(ALPHAVIS/TWO))
+     1                      -(ONE/THREE)*(PVBeBAR(3)**(ALPHAVIS/TWO))
+     2                      -(ONE/THREE)*(PVBeBAR(1)**(ALPHAVIS/TWO)))
+        DEVTAU(3) = MUVIS * ((TWO/THREE)*(PVBeBAR(3)**(ALPHAVIS/TWO))
+     1                      -(ONE/THREE)*(PVBeBAR(1)**(ALPHAVIS/TWO))
+     2                      -(ONE/THREE)*(PVBeBAR(2)**(ALPHAVIS/TWO)))
 !       - Calculating Residual Vector
         DO N = 1, 3
           RESVEC(N) = EPSe(N) - EPSeTR(N) 
@@ -1280,7 +1281,7 @@
       STRESS(5) = STRESSTOT(1,3)
       STRESS(6) = STRESSTOT(2,3)
 !
-!     CALCULATE TOTAL ABAQUS TANGENT STIFNESS MATRIX
+!     CALCULATE TOTAL ABAQUS TANGENT STIFFNESS MATRIX
       DO J=1,6
         DO K=1,6
           DDSDDE(J,K) = CNEQ(J,K) + CNEQ_2(J,K)+ CEQ(J,K)
