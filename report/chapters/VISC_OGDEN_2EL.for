@@ -1,7 +1,6 @@
 !----------------------------------------------------------------------
 !    UMAT FOR FINITE VISCOELASTIC THEORY - REESE & GOVINDJEE
 !    WITH OGDEN HYPERELASTICITY MODEL
-!    IMPLEMENTED AS PART OF MINI THESIS  
 !    - ALAN J CORREA
 !----------------------------------------------------------------------
 !    PROPS(1) - MU
@@ -17,6 +16,7 @@
 !    PROPS(11) - KVIS_2
 !    PROPS(12) - ETADEV_2
 !    PROPS(13) - ETAVOL_2
+
 !----------------------------------------------------------------------
       SUBROUTINE UMAT(STRESS, STATEV, DDSDDE, SSE, SPD, SCD, RPL,
      1 DDSDDT, DRPLDE, DRPLDT, STRAN, DSTRAN, TIME, DTIME, TEMP, DTEMP,
@@ -36,6 +36,7 @@
 ! ---------------------------------------------------------------------
 !     LOCAL ARRAYS
 ! ---------------------------------------------------------------------
+!     ##### FIRST VISCOUS ELEMENT  
 !     BeOLD         - VISCOUS LEFT CAUCHY-GREEN DEFORMATION TENSOR (AT N-1)
 !     BeOLDINV      - INVERSE(BeOLD) 
 !     CiOLD         - VISCOUS RIGHT CAUCHY-GREEN DEFORMATION TENSOR (AT N-1)
@@ -112,7 +113,7 @@
 !     CEQ           - EQ SPATIAL TANGENT STIFFNESS MODULUS (VOIGT)
 !     STRESSTOT     - TOTAL CAUCHY STRESS
 !     IDT2          - 2ND ORDER IDENTTITY TENSOR 
-!  ---------------------------------------------------------------------
+! ---------------------------------------------------------------------
       DOUBLE PRECISION, DIMENSION(3,3) :: IDT2
 
       DOUBLE PRECISION, DIMENSION(3, 3) :: BeOLD
@@ -388,7 +389,7 @@
         DO N = 1, 3
           RESVEC(N) = EPSe(N) - EPSeTR(N) 
      1                + DTIME * (ONE/(TWO*ETADEV)*DEVTAU(N)
-     2                          +KVIS/(SIX*ETAVOL)*(Je*Je-ONE))
+     2                          +KVIS/(THREE*FOUR*ETAVOL)*(Je*Je-ONE))
         END DO
 !       - Calculating Norm of Residual Vector
         NORMRES = (RESVEC(1)**TWO 
@@ -431,7 +432,7 @@
           DO J = 1,3
             KMAT(I,J) = IDT2(I,J)
      1               + DTIME * ((ONE/(TWO*ETADEV))*DDEVTAUDEPSe(I,J) 
-     2                         -(ONE/(THREE*ETAVOL)*KVIS*Je*Je))
+     2                         +(ONE/(THREE*ETAVOL)*KVIS*Je*Je))
           END DO
         END DO
 !       - Calculating KINV
@@ -551,7 +552,7 @@
           RESVEC_2(N) = EPSe_2(N) - EPSeTR_2(N) 
      1                + DTIME *
      2                 (ONE/(TWO*ETADEV_2)*DEVTAU_2(N)
-     2                  + KVIS_2/(SIX*ETAVOL_2)*(Je_2*Je_2-ONE))
+     2                  + KVIS_2/(THREE*FOUR*ETAVOL_2)*(Je_2*Je_2-ONE))
         END DO
 !       - Calculating Norm of Residual Vector
         NORMRES_2 = (RESVEC_2(1)**TWO 
@@ -595,7 +596,7 @@
             KMAT_2(I,J) = IDT2(I,J)
      1               + DTIME * 
      2                ((ONE/(TWO*ETADEV_2))*DDEVTAUDEPSe_2(I,J) 
-     2                -(ONE/(THREE*ETAVOL_2)*KVIS_2*Je_2*Je_2))
+     2                +(ONE/(THREE*ETAVOL_2)*KVIS_2*Je_2*Je_2))
           END DO
         END DO
 !       - Calculating KINV
@@ -1459,7 +1460,7 @@
    90         CONTINUE
 
 *             Update eigenvectors
-*             --- This loop can be omitted if only the eigenvalues are desired 
+*             --- This loop can be omitted if only the eigenvalues are desired ---
               DO 100, R = 1, N
                 T       = Q(R, X)
                 Q(R, X) = C * T - S * Q(R, Y)
