@@ -1,0 +1,39 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: umat_finite_viscoelasticity
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Alan Jason
+    family-names: Correa
+    email: alan.correa@rwth-aachen.de
+    affiliation: RWTH Aachen
+    orcid: 'https://orcid.org/0009-0000-7947-7810'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.14801399
+repository-code: >-
+  https://github.com/thealanjason/umat_finite_viscoelasticity
+abstract: >-
+  This repository consists the work of my Mini Thesis titled
+  "Implementation of a Viscoelastic Model for Hydrogels in
+  ABAQUS" for the M.Sc. Computer-Aided Mechanical
+  Engineering course at RWTH Aachen University. The outcome
+  of this work was a User Material Subroutine based on the
+  Finite Viscoelasticity Theory with multiple relaxation
+  mechanisms and 1-parameter Ogden Models for the strain
+  energy function.
+keywords:
+  - umat
+  - abaqus
+  - fem
+  - material-modelling
+  - hyperelasticity
+  - viscoelasticity
+license: MIT
+version: v1.0.0
+date-released: '2025-02-04'
